@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu&family=Gowun+Batang&family=Nanum+Gothic&family=Noto+Serif+KR:wght@300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<script src="https://code.jquery.com/jquery-3.6.3.js"></script>
+
+<style type="text/css">
+	.memo{
+	  position: absolute;
+	  border: 0px solid gray;
+	  font-size: 1.5em;
+	  font-family: "Gowun Batang";
+	}
+
+	.button{
+	  line-height: 140px;
+	  top: 30px;
+	  width: 400px;
+	  height: 100px;
+	  line-height: 100px;
+	  text-align: center;
+	}
+	
+	.addform{
+	  left: 100px;
+	  top: 150px;
+	  width: 500px;
+	  height: 400px;
+	  padding: 20px 20px;
+	}
+	
+	.updateform{
+	  left: 100px;
+	  top: 150px;
+	  width: 500px;
+	  height: 400px;
+	  padding: 20px 20px;
+	}
+	
+	div.list{
+	  left: 700px;
+	  top: 100px;
+	  width: 600px;
+	  height: 700px;
+	  padding: 20px 20px;
+	   
+	}
+	
+	img.select{
+	  border: 2px solid pink;
+	}
+	
+	img.avata{
+	  cursor: pointer;
+	}
+	
+	span.writeday{
+	  float: right;
+	  color: #bbb;
+	}
+	
+	.mod, .del{
+	  font-size: 14px;
+	  cursor: pointer;
+	}
+	
+	#writer {
+	  font-size: 15px;
+	}
+	
+</style>
+</head>
+<body>
+
+<script type="text/javascript">
+	$(function(){
+		
+		list();
+		
+		$("#addform").hide();
+		$(".update").hide();
+		
+		$("#btnadd").click(function(){
+			$(".update").hide();
+			$("#addform").slideToggle();
+		})
+		
+		//사진선택 초기값
+		$(".avata").eq(0).addClass("select");
+		$("#avata").val($(".avata").eq(0).attr("src"))
+		
+		//사진선택 어렵당 어려워도 해야지
+		$(".avata").click(function(){
+			var photo=$(this).attr('src'); // 선택값을 얻어두고
+			$("#avata").val(photo); //히든 인풋에 그 값을 넣자 그럼 저장이됨
+			$(this).siblings().removeClass("select");
+			$(this).addClass("select");
+		})
+		
+		//insert
+		$(".dbsave").click(function(){
+			var data=$("#addform").serialize();
+			$.ajax({
+				type: "post",
+				url: "insertaction.jsp",
+				dataType: "html",
+				data: data,
+				success: function(res){
+					list();
+					
+					//입력값 지우기
+					$("#writer").val("");
+					$("#content").val("");
+					//선택아바타 클래스 제거
+					$(".avata").removeClass("select");
+					$("#avata").val($(".avata").eq(2).attr("src"));
+					$(this).addClass("select");
+					$("#avata").val($(this).attr("src"));
+				}
+			})
+		})
+		
+		//update
+		$(document).on("click",".mod",function(){
+			$.ajax({
+				type: "get",
+				url: "updateaction.jsp",
+				dataType: "json",
+				success: function(res){
+					
+				}
+			})
+		})
+		
+		//delete 먼저하고 자자~
+		$(document).on("click",".del",function(){
+			var num=$(this).attr("num");
+			$.ajax({
+				type: "get",
+				url: "deleteaction.jsp",
+				dataType: "html",
+				data:{"num":num},
+				success: function(res){
+					list();
+				}
+			})
+		})
+		
+		
+
+	})
+	//처음 들어갔을때 나오는 list -> 사용자 함수로 해서 처음에 부르기
+	function list(){
+		$.ajax({
+			type: "get",
+			url: "selectaction.jsp",
+			dataType: "json",
+			success: function(res){
+				var s="";
+				
+				if(res.length==0) {
+					s+="<h3 class='alert alert-info'>등록된 메모가 없습니다</h3>"
+				}else{
+					
+					$.each(res,function(i,ele){
+						
+					
+				s+="<table class='table table-bordered' style='width:400px;'><tr><td>";
+				
+				s+="<span id='writer'>작성자:"+ele.writer+"&nbsp;&nbsp;"+ele.writeday+"<br>";
+				s+="<span class='mod' num="+ele.num+">수정</span>&nbsp;&nbsp;<span class='del' num="+ele.num+">삭제</span>"
+				s+="<img src="+ele.avata+" height='100'>"+"</span></td></tr>";
+				s+="<tr><td><pre width='200' height='300'>"+ele.content+"</pre></td></tr>";
+				s+=""
+				s+="</table>";
+					})
+				
+				
+				}
+				$(".list").html(s);
+			}
+		
+		})
+	}
+		
+
+</script>
+
+ 	<div class="memo button">
+ 		<button type="button" class="btn btn-warning" id="btnadd" style="width: 120px;">
+ 			메모추가
+ 		</button>
+ 	</div>
+ 	<!-- 이벤트에의해 이후에 생긴 (수정, 삭제) 버튼들은 on메서드로 해야함 일반적인 이벤트는 동작하지 않음 주의~!!~ -->
+ 	<div class="memo addform">
+ 		<form id="addform">
+ 		  <table class="table table-bordered">
+ 		    <caption>메모추가</caption>
+ 		      <tr>
+ 		          <th width="100" bgcolor="lightyellow">작성자</th>
+	 		      <td>
+	 		        <input type="text" class="form-control" name="writer" id="writer"
+	 		        style="width: 120px;">
+	 		      </td>
+ 		      </tr>
+ 		      <tr>
+ 		          <th width="100" bgcolor="lightyellow">메모</th>
+	 		      <td>
+	 		        <textarea style="width: 300px; height: 100px;" name="content" id="content" class="form-control"></textarea>
+	 		      </td>
+ 		      </tr>
+ 		      <tr>
+ 		          <th width="100" bgcolor="lightyellow">아바타</th>
+	 		      <td>
+	 		        <input type="hidden" name="avata" id="avata">
+	 		        <script type="text/javascript">
+	 		        var tag="";
+	 		        for(var i=1;i<=10;i++){
+	 		        	tag+="<img src='../avata/"+i+".png' width='50' class='avata'>";
+	 		        	
+	 		        	if(i==5)
+	 		        		tag+="<br>";
+	 		        }
+	 		        document.write(tag);
+	 		        
+	 		        </script>
+	 		      </td>
+ 		      </tr>
+ 		      
+ 		      <tr>
+ 		      	<td colspan="2" align="center" style="cursor: pointer;" class="dbsave">
+ 		      	  <button type="button" class="btn btn-success">DB에 저장하기</button>
+ 		      	</td>
+ 		      </tr>
+ 		  </table>
+ 		</form>
+ 	</div>
+ 	
+ 	<div class="memo list">list</div>
+ 	<div class="memo update">update</div>
+ 	
+</body>
+</html>
